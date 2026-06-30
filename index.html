@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>とき宣 ジャケ写クイズ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap');
+
+:root {
+  --orange:    #FF7A00;
+  --orange-lt: #FFE0C0;
+  --orange-dk: #CC5500;
+  --orange-bg: #FFF7F0;
+  --orange-mid:#FF9A3C;
+  --dark:      #1A0800;
+  --gray:      #7A6050;
+  --correct:   #3DB87A;
+  --wrong:     #E83A3A;
+  --white:     #FFFFFF;
+  --border:    #FFD0A0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  background: var(--orange-bg);
+  color: var(--dark);
+  font-family: 'Noto Sans JP', sans-serif;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  touch-action: manipulation;
+}
+
+/* ─── 画面共通ラッパー ─── */
+.screen { display: none; flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ─── ヘッダー ─── */
+header {
+  background: linear-gradient(135deg, var(--orange-dk) 0%, var(--orange) 55%, var(--orange-mid) 100%);
+  padding: 16px 20px 14px;
+  text-align: center;
+  position: relative;
+}
+header h1 {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-weight: 900;
+  font-size: clamp(16px, 4.5vw, 22px);
+  color: white;
+  letter-spacing: .12em;
+  text-shadow: 0 2px 8px rgba(0,0,0,.22);
+}
+header p {
+  font-size: 11px;
+  color: rgba(255,255,255,.82);
+  margin-top: 4px;
+  letter-spacing: .06em;
+}
+
+/* ─── コンテナ ─── */
+.container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 16px 20px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ══════════════════════════════
+   ホーム画面
+══════════════════════════════ */
+.home-body {
+  padding-top: 16px;
+  text-align: center;
+}
+.home-lead {
+  font-size: 12.5px;
+  color: var(--gray);
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+.home-lead strong {
+  color: var(--orange-dk);
+}
+
+.mode-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mode-card {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform .15s, box-shadow .15s, border-color .15s;
+  box-shadow: 0 2px 8px rgba(255,122,0,.06);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.mode-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255,122,0,.14);
+  border-color: var(--orange);
+}
+.mode-card:active { transform: translateY(0); }
+
+.mode-card-icon {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--orange-lt);
+  color: var(--orange-dk);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+.mode-card-body { flex: 1; min-width: 0; }
+.mode-card-title {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-weight: 900;
+  font-size: 17px;
+  color: var(--orange-dk);
+  letter-spacing: .04em;
+  margin-bottom: 2px;
+}
+.mode-card-sub {
+  font-size: 11.5px;
+  color: var(--gray);
+  line-height: 1.5;
+}
+.mode-card-count {
+  display: inline-block;
+  background: var(--orange-lt);
+  color: var(--orange-dk);
+  font-size: 10.5px; font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 20px;
+  margin-top: 5px;
+}
+.mode-card-arrow {
+  flex-shrink: 0;
+  color: var(--orange);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* ══════════════════════════════
+   クイズ画面
+══════════════════════════════ */
+.quiz-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0 6px;
+  flex-shrink: 0;
+}
+.home-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: white;
+  border: 1.5px solid var(--orange);
+  color: var(--orange-dk);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  white-space: nowrap;
+}
+.home-btn:hover { background: var(--orange-lt); }
+.quiz-mode-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--orange-dk);
+  background: var(--orange-lt);
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.quiz-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 0 6px;
+  flex-shrink: 0;
+}
+.progress-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: var(--orange-lt);
+  border-radius: 3px;
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--orange-dk), var(--orange-mid));
+  border-radius: 3px;
+  transition: width .4s ease;
+}
+.progress-num {
+  font-size: 11px;
+  color: var(--gray);
+  white-space: nowrap;
+}
+
+/* ジャケ写（回答前後でサイズが変わらないよう、画面比率で高さを固定） */
+#jacket-area {
+  flex: 0 0 38vh;
+  min-height: 0;
+  display: flex;
+}
+.jacket-wrap {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0,0,0,.14);
+  background: #f0ddc8;
+  flex: 1;
+  min-height: 130px;
+  width: 100%;
+  display: flex;
+}
+.jacket-wrap img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  display: block;
+  margin: auto;
+}
+.jacket-placeholder {
+  width: 100%; height: 100%;
+  background: var(--orange-lt);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--orange-dk);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  border-radius: 18px;
+}
+.year-badge {
+  position: absolute;
+  top: 11px; right: 11px;
+  background: rgba(0,0,0,.5);
+  color: white;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 10px;
+  backdrop-filter: blur(4px);
+}
+
+/* 入力エリア */
+.input-area {
+  margin-top: 10px;
+  position: relative;
+  flex-shrink: 0;
+}
+.input-area input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 16px;
+  font-family: 'Noto Sans JP', sans-serif;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  outline: none;
+  background: white;
+  color: var(--dark);
+  transition: border-color .2s, background .2s;
+}
+.input-area input:focus { border-color: var(--orange); }
+.input-area input.correct-input { border-color: var(--correct); background: #f0fff8; }
+.input-area input.wrong-input   { border-color: var(--wrong);   background: #fff3f3; }
+
+/* 予測候補（入力欄の上に表示） */
+.suggestions {
+  position: absolute;
+  bottom: 100%; left: 0; right: 0;
+  margin-bottom: 6px;
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  max-height: min(45vh, 280px);
+  overflow-y: auto;
+  z-index: 20;
+  box-shadow: 0 -8px 24px rgba(0,0,0,.14);
+}
+.suggestion-item {
+  padding: 11px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--dark);
+  border-bottom: 1px solid #ffeedd;
+  transition: background .1s;
+}
+.suggestion-item:last-child { border-bottom: none; }
+.suggestion-item:hover { background: var(--orange-lt); }
+.suggestion-item mark { background: none; color: var(--orange-dk); font-weight: 700; }
+
+.submit-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 14px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--orange-dk), var(--orange));
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-size: 15px; font-weight: 900;
+  letter-spacing: .08em;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255,122,0,.32);
+  transition: transform .15s, box-shadow .15s, opacity .15s;
+}
+.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(255,122,0,.42); }
+.submit-btn:disabled {
+  background: #e8e0d8;
+  color: var(--gray);
+  cursor: default;
+  box-shadow: none;
+  transform: none;
+  opacity: .7;
+}
+
+/* フィードバック */
+.feedback {
+  display: none;
+  margin-top: 10px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  align-items: flex-start;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.feedback.show { display: flex; }
+.feedback.fb-correct { background: #e8fff4; color: #1a7a4a; }
+.feedback.fb-wrong   { background: #fff2f2; color: #aa2222; }
+.feedback .fb-icon { font-size: 22px; flex-shrink: 0; }
+.feedback .fb-body { flex: 1; }
+.feedback .fb-answer { font-size: 13px; font-weight: 400; color: var(--dark); margin-top: 3px; }
+
+.skip-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px;
+  background: none;
+  border: 1.5px dashed #ccc;
+  border-radius: 10px;
+  color: var(--gray);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: border-color .15s, color .15s;
+  flex-shrink: 0;
+}
+.skip-btn:hover { border-color: var(--orange); color: var(--orange-dk); }
+
+.next-btn {
+  display: none;
+  width: 100%;
+  margin-top: 10px;
+  padding: 15px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--orange-dk), var(--orange));
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-size: 15px; font-weight: 900;
+  letter-spacing: .08em;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255,122,0,.35);
+  transition: transform .15s, box-shadow .15s;
+}
+.next-btn.show { display: block; }
+.next-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(255,122,0,.45); }
+
+/* ══════════════════════════════
+   結果画面
+══════════════════════════════ */
+.result-body {
+  padding-top: 18px;
+  text-align: center;
+}
+.result-title {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  color: var(--orange-dk);
+  margin-bottom: 4px;
+}
+.result-mode-tag {
+  display: inline-block;
+  background: var(--orange-lt);
+  color: var(--orange-dk);
+  font-size: 11px; font-weight: 700;
+  padding: 3px 12px; border-radius: 20px;
+  margin-bottom: 14px;
+}
+.score-display {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-size: 64px; font-weight: 900;
+  color: var(--orange-dk);
+  line-height: 1;
+}
+.score-display .score-denom { font-size: 24px; color: var(--gray); }
+.score-pct {
+  font-size: 13px; color: var(--gray);
+  margin-top: 4px; margin-bottom: 8px;
+}
+.score-msg {
+  font-size: 14px; color: var(--dark);
+  line-height: 1.8;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+}
+
+/* 結果リスト */
+.result-list-label {
+  text-align: left;
+  font-size: 12px; font-weight: 700;
+  color: var(--gray);
+  letter-spacing: .05em;
+  margin-bottom: 6px;
+}
+.result-list-wrap {
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 18px;
+  background: white;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid #fff0e0;
+}
+.result-item:last-child { border-bottom: none; }
+.ri-thumb {
+  width: 46px; height: 46px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--orange-lt);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.ri-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.ri-info { flex: 1; text-align: left; }
+.ri-title { font-size: 13px; font-weight: 700; color: var(--dark); }
+.ri-year  { font-size: 11px; color: var(--gray); margin-top: 1px; }
+.ri-icon  { font-size: 20px; flex-shrink: 0; }
+
+/* ボタン */
+.btn-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.btn-primary {
+  width: 100%; padding: 15px;
+  background: linear-gradient(135deg, var(--orange-dk), var(--orange));
+  color: white; border: none; border-radius: 14px;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-size: 15px; font-weight: 900; letter-spacing: .08em;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255,122,0,.32);
+  transition: transform .15s, box-shadow .15s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(255,122,0,.42); }
+.btn-secondary {
+  width: 100%; padding: 13px;
+  background: white;
+  color: var(--orange-dk);
+  border: 2px solid var(--orange);
+  border-radius: 14px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer;
+  transition: background .15s;
+}
+.btn-secondary:hover { background: var(--orange-lt); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>とき宣 ジャケ写クイズ</h1>
+  <p>超ときめき♡宣伝部のジャケットを当てよう！</p>
+</header>
+
+<!-- ══ ホーム画面 ══ -->
+<div id="screen-home" class="screen active">
+  <div class="container">
+    <div class="home-body">
+      <p class="home-lead">
+        ジャケ写を見てタイトルを入力しよう！<br>
+        途中まで打つと<strong>予測候補</strong>が出るから<br>
+        全部入力しなくてもOK
+      </p>
+      <div class="mode-cards">
+
+        <div class="mode-card" onclick="startQuiz('single')">
+          <div class="mode-card-icon">S</div>
+          <div class="mode-card-body">
+            <div class="mode-card-title">シングル編</div>
+            <div class="mode-card-sub">
+              土っキュン!!少女 から<br>
+              どりーむじゃんぼ！まで全シングル
+            </div>
+            <span class="mode-card-count">全18問</span>
+          </div>
+          <span class="mode-card-arrow">›</span>
+        </div>
+
+        <div class="mode-card" onclick="startQuiz('album')">
+          <div class="mode-card-icon">A</div>
+          <div class="mode-card-body">
+            <div class="mode-card-title">アルバム編</div>
+            <div class="mode-card-sub">
+              ときおとめ から<br>
+              ときめきえがお まで全アルバム
+            </div>
+            <span class="mode-card-count">全5問</span>
+          </div>
+          <span class="mode-card-arrow">›</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ クイズ画面 ══ -->
+<div id="screen-quiz" class="screen">
+  <div class="container">
+    <div class="quiz-header-bar">
+      <button class="home-btn" id="quiz-home-btn">‹ ホームへ</button>
+      <span class="quiz-mode-label" id="quiz-mode-label"></span>
+    </div>
+    <div class="quiz-progress-row">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <span class="progress-num" id="progress-num"></span>
+    </div>
+
+    <div id="jacket-area"></div>
+
+    <div class="input-area" id="input-area">
+      <input
+        type="text"
+        id="answer-input"
+        placeholder="タイトルを入力してね…"
+        autocomplete="off"
+      />
+      <div class="suggestions" id="suggestions" style="display:none"></div>
+    </div>
+
+    <button class="submit-btn" id="submit-btn" disabled>解答する</button>
+
+    <div class="feedback" id="feedback">
+      <span class="fb-icon" id="fb-icon"></span>
+      <div class="fb-body">
+        <div id="fb-msg"></div>
+        <div class="fb-answer" id="fb-answer"></div>
+      </div>
+    </div>
+
+    <button class="skip-btn" id="skip-btn">わからない / スキップ</button>
+    <button class="next-btn" id="next-btn"></button>
+  </div>
+</div>
+
+<!-- ══ 結果画面 ══ -->
+<div id="screen-result" class="screen">
+  <div class="container">
+    <div class="result-body">
+      <div class="result-title">結果発表！</div>
+      <div class="result-mode-tag" id="result-mode-tag"></div>
+      <div class="score-display">
+        <span id="result-score"></span><span class="score-denom"> / <span id="result-total"></span></span>
+      </div>
+      <div class="score-pct" id="result-pct"></div>
+      <div class="score-msg" id="result-msg"></div>
+
+      <div class="result-list-label">問題一覧</div>
+      <div class="result-list-wrap" id="result-list"></div>
+
+      <div class="btn-row">
+        <button class="btn-primary" id="btn-retry">もう一度チャレンジ</button>
+        <button class="btn-secondary" id="btn-home">ホームに戻る</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════
+   データ
+══════════════════════════════ */
+const SINGLES = [
+  { id:'sin1',  title:'土っキュン♡!!少女',                   year:'2015', img:'sin-1.jpg'  },
+  { id:'sin2',  title:'季節外れのときめき♡サマー',           year:'2015', img:'sin-2.jpg'  },
+  { id:'sin3',  title:'むてきのうた',                         year:'2016', img:'sin-3.jpg'  },
+  { id:'sin4',  title:'ガンバ!!',                             year:'2016', img:'sin-4.jpg'  },
+  { id:'sin5',  title:'どどどどどりーまー',                   year:'2017', img:'sin-5.jpg'  },
+  { id:'sin6',  title:'DEADHEAT',                             year:'2017', img:'sin-6.jpg'  },
+  { id:'sin7',  title:'VICTORY STORY / 青春ハートシェイカー', year:'2019', img:'sin-7.jpg'  },
+  { id:'sin8',  title:'恋のシェイプアップ♡',                 year:'2019', img:'sin-8.jpg'  },
+  { id:'sin9',  title:'トゥモロー最強説!!',                   year:'2020', img:'sin-9.jpg'  },
+  { id:'sin10', title:'STAR',                                 year:'2022', img:'sin-10.jpg' },
+  { id:'sin11', title:'LOVEイヤイヤ期',                       year:'2023', img:'sin-11.jpg' },
+  { id:'sin12', title:'かわいいメモリアル',                   year:'2023', img:'sin-12.jpg' },
+  { id:'sin13', title:'最上級にかわいいの！',                 year:'2024', img:'sin-13.jpg' },
+  { id:'sin14', title:'世界でいちばんアイドル / ひみつのふふふ', year:'2025', img:'sin-14.jpg' },
+  { id:'sin15', title:'ハニートリガー',                       year:'2025', img:'sin-15.jpg' },
+  { id:'sin16', title:'TwinkleStart',                         year:'2025', img:'sin-16.jpeg' },
+  { id:'sin17', title:'ハートな胸の内♡ / 超最強',           year:'2025', img:'sin-17.jpg' },
+  { id:'sin18', title:'どりーむじゃんぼ！',                   year:'2026', img:'sin-18.jpg' },
+];
+
+const ALBUMS = [
+  { id:'alb1', title:'ときおとめ',           year:'2018', img:'al-2.jpg' },
+  { id:'alb2', title:'ときめきがすべて',     year:'2020', img:'al-3.jpg' },
+  { id:'alb3', title:'ときめく恋と青春',     year:'2024', img:'al-4.jpg' },
+  { id:'alb4', title:'ときめきルールブック', year:'2024', img:'al-5.jpg' },
+  { id:'alb5', title:'ときめきえがお',       year:'2026', img:'al-6.jpg' },
+];
+
+/* ══════════════════════════════
+   状態
+══════════════════════════════ */
+let currentMode = 'single';
+let queue       = [];
+let currentIdx  = 0;
+let score       = 0;
+let results     = [];
+let answered    = false;
+
+/* ══════════════════════════════
+   画面切替
+══════════════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const next = document.getElementById(id);
+  next.classList.add('active');
+  next.scrollTop = 0;
+}
+
+/* ══════════════════════════════
+   ユーティリティ
+══════════════════════════════ */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function normalize(s) {
+  return s
+    .replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+    .replace(/[♡♥]/g, '')
+    .replace(/\s+/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function escapeReg(s)   { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function escapeAttr(s)  { return s.replace(/"/g, '&quot;'); }
+
+/* ══════════════════════════════
+   クイズ開始
+══════════════════════════════ */
+function startQuiz(mode) {
+  currentMode = mode;
+  const data  = mode === 'single' ? SINGLES : ALBUMS;
+  queue       = shuffle(data);
+  currentIdx  = 0;
+  score       = 0;
+  results     = [];
+  answered    = false;
+
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+/* ══════════════════════════════
+   問題描画
+══════════════════════════════ */
+function renderQuestion() {
+  const item  = queue[currentIdx];
+  const total = queue.length;
+  const pct   = (currentIdx / total) * 100;
+
+  // プログレス
+  document.getElementById('quiz-mode-label').textContent =
+    currentMode === 'single' ? 'シングル編' : 'アルバム編';
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-num').textContent  = `${currentIdx + 1} / ${total}`;
+
+  // ジャケ写
+  const ja = document.getElementById('jacket-area');
+  ja.innerHTML = `
+    <div class="jacket-wrap">
+      <img src="img/quiz/${item.img}" alt="ジャケ写"
+           onerror="this.parentNode.innerHTML='<div class=&quot;jacket-placeholder&quot;>NO IMAGE</div>'" />
+      <span class="year-badge">${item.year}</span>
+    </div>`;
+
+  // 入力リセット
+  const input = document.getElementById('answer-input');
+  input.value = '';
+  input.disabled = false;
+  input.className = '';
+  input.placeholder = 'タイトルを入力してね…';
+
+  // 予測リセット
+  document.getElementById('suggestions').style.display = 'none';
+  document.getElementById('suggestions').innerHTML = '';
+
+  // フィードバックリセット
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  document.getElementById('fb-icon').textContent   = '';
+  document.getElementById('fb-msg').textContent    = '';
+  document.getElementById('fb-answer').textContent = '';
+
+  // ボタンリセット
+  document.getElementById('skip-btn').style.display = '';
+  const sb = document.getElementById('submit-btn');
+  sb.style.display = '';
+  sb.disabled = true;
+  const nb = document.getElementById('next-btn');
+  nb.className = 'next-btn';
+  nb.textContent = currentIdx + 1 < total ? '次の問題へ ▶' : '結果を見る ▶';
+
+  answered = false;
+  input.focus();
+}
+
+/* ══════════════════════════════
+   入力イベント
+══════════════════════════════ */
+document.getElementById('answer-input').addEventListener('input', function() {
+  if (answered) return;
+  const val  = this.value.trim();
+  const sug  = document.getElementById('suggestions');
+  document.getElementById('submit-btn').disabled = !val;
+  if (!val) { sug.style.display = 'none'; return; }
+
+  const data = currentMode === 'single' ? SINGLES : ALBUMS;
+  const hits = data.filter(d =>
+    d.title.toLowerCase().includes(val.toLowerCase()) ||
+    normalize(d.title).includes(normalize(val))
+  ).slice(0, 7);
+
+  if (!hits.length) { sug.style.display = 'none'; return; }
+
+  sug.style.display = 'block';
+  sug.innerHTML = hits.map(h => {
+    const re = new RegExp(`(${escapeReg(val)})`, 'gi');
+    const hi = h.title.replace(re, '<mark>$1</mark>');
+    return `<div class="suggestion-item" data-title="${escapeAttr(h.title)}">${hi}</div>`;
+  }).join('');
+});
+
+document.getElementById('answer-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    e.stopPropagation();
+    attemptSubmit();
+  }
+});
+
+document.getElementById('suggestions').addEventListener('click', function(e) {
+  const item = e.target.closest('.suggestion-item');
+  if (!item) return;
+  const title = item.dataset.title;
+  const input = document.getElementById('answer-input');
+  input.value = title;
+  document.getElementById('suggestions').style.display = 'none';
+  document.getElementById('submit-btn').disabled = false;
+  input.focus();
+});
+
+function attemptSubmit() {
+  if (answered) return;
+  const val = document.getElementById('answer-input').value.trim();
+  if (!val) return;
+  document.getElementById('suggestions').style.display = 'none';
+  judgeAnswer(val);
+}
+
+document.getElementById('submit-btn').addEventListener('click', attemptSubmit);
+
+/* ══════════════════════════════
+   正誤判定
+══════════════════════════════ */
+function judgeAnswer(val) {
+  if (answered) return;
+  answered = true;
+
+  const item    = queue[currentIdx];
+  const correct = normalize(item.title) === normalize(val);
+
+  const input = document.getElementById('answer-input');
+  const fb    = document.getElementById('feedback');
+  input.disabled = true;
+  document.getElementById('suggestions').style.display = 'none';
+  document.getElementById('skip-btn').style.display = 'none';
+  document.getElementById('submit-btn').style.display = 'none';
+
+  if (correct) {
+    score++;
+    input.classList.add('correct-input');
+    fb.className = 'feedback fb-correct show';
+    document.getElementById('fb-icon').textContent   = '✓';
+    document.getElementById('fb-msg').textContent    = '正解！きみはとき宣マスター';
+    document.getElementById('fb-answer').textContent = '';
+  } else {
+    input.classList.add('wrong-input');
+    fb.className = 'feedback fb-wrong show';
+    document.getElementById('fb-icon').textContent   = '✗';
+    document.getElementById('fb-msg').textContent    = '残念…';
+    document.getElementById('fb-answer').textContent = `正解：「${item.title}」`;
+  }
+
+  results.push({ item, correct, userVal: val });
+  document.getElementById('next-btn').classList.add('show');
+}
+
+/* ══════════════════════════════
+   スキップ
+══════════════════════════════ */
+document.getElementById('skip-btn').addEventListener('click', function() {
+  if (answered) return;
+  answered = true;
+
+  const item = queue[currentIdx];
+  const input = document.getElementById('answer-input');
+  const fb    = document.getElementById('feedback');
+
+  input.disabled = true;
+  document.getElementById('suggestions').style.display = 'none';
+  document.getElementById('submit-btn').style.display = 'none';
+  this.style.display = 'none';
+
+  fb.className = 'feedback fb-wrong show';
+  document.getElementById('fb-icon').textContent   = '⏭';
+  document.getElementById('fb-msg').textContent    = 'スキップ！';
+  document.getElementById('fb-answer').textContent = `正解：「${item.title}」`;
+
+  results.push({ item, correct: false, userVal: '(スキップ)' });
+  document.getElementById('next-btn').classList.add('show');
+});
+
+/* ══════════════════════════════
+   次へ
+══════════════════════════════ */
+document.getElementById('next-btn').addEventListener('click', function() {
+  currentIdx++;
+  if (currentIdx >= queue.length) {
+    renderResult();
+  } else {
+    renderQuestion();
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  const nb = document.getElementById('next-btn');
+  if (nb.classList.contains('show')) {
+    e.preventDefault();
+    nb.click();
+  }
+});
+
+/* ══════════════════════════════
+   結果描画
+══════════════════════════════ */
+function renderResult() {
+  const total = queue.length;
+  const pct   = Math.round((score / total) * 100);
+
+  let msg = '';
+  if (pct === 100) msg = '全問正解！！完璧すぎるとき宣マスター<br>ジャケ写のすみずみまで知ってるね！';
+  else if (pct >= 80) msg = 'すごい！ほぼ完璧だよ<br>ジャケ写もしっかり頭に入ってる！';
+  else if (pct >= 60) msg = 'なかなかいい感じ！<br>あと少しで完璧な宣伝部員';
+  else if (pct >= 40) msg = 'これがジャケ写に出会うきっかけ<br>改めて見てみてね！';
+  else                msg = 'ジャケ写、この機会にじっくり<br>見てみてね すべてに物語があるよ！';
+
+  document.getElementById('result-mode-tag').textContent =
+    currentMode === 'single' ? 'シングル編' : 'アルバム編';
+  document.getElementById('result-score').textContent = score;
+  document.getElementById('result-total').textContent = total;
+  document.getElementById('result-pct').textContent   = `正解率 ${pct}%`;
+  document.getElementById('result-msg').innerHTML     = msg;
+
+  document.getElementById('result-list').innerHTML = results.map(r => `
+    <div class="result-item">
+      <div class="ri-thumb">
+        <img src="img/quiz/${r.item.img}" onerror="this.remove()" />
+      </div>
+      <div class="ri-info">
+        <div class="ri-title">${r.item.title}</div>
+        <div class="ri-year">${r.item.year}年リリース</div>
+      </div>
+      <span class="ri-icon" style="color:${r.correct ? 'var(--correct)' : 'var(--wrong)'}">
+        ${r.correct ? '✓' : '✗'}
+      </span>
+    </div>
+  `).join('');
+
+  showScreen('screen-result');
+}
+
+/* ══════════════════════════════
+   結果画面のボタン
+══════════════════════════════ */
+document.getElementById('btn-retry').addEventListener('click', function() {
+  startQuiz(currentMode);
+});
+
+document.getElementById('btn-home').addEventListener('click', function() {
+  showScreen('screen-home');
+});
+
+document.getElementById('quiz-home-btn').addEventListener('click', function() {
+  showScreen('screen-home');
+});
+</script>
+</body>
+</html>
