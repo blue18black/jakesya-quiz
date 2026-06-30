@@ -366,17 +366,18 @@ header p {
   width: 100%;
   margin-top: 10px;
   padding: 11px;
-  background: none;
-  border: 1.5px dashed #ccc;
+  background: white;
+  border: 1.5px solid var(--border);
   border-radius: 10px;
   color: var(--gray);
   font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
   font-family: 'Noto Sans JP', sans-serif;
-  transition: border-color .15s, color .15s;
+  transition: border-color .15s, color .15s, background .15s;
   flex-shrink: 0;
 }
-.skip-btn:hover { border-color: var(--orange); color: var(--orange-dk); }
+.skip-btn:hover { border-color: var(--orange); color: var(--orange-dk); background: var(--orange-lt); }
 
 .next-btn {
   display: none;
@@ -429,16 +430,7 @@ header p {
 .score-display .score-denom { font-size: 24px; color: var(--gray); }
 .score-pct {
   font-size: 13px; color: var(--gray);
-  margin-top: 4px; margin-bottom: 8px;
-}
-.score-msg {
-  font-size: 14px; color: var(--dark);
-  line-height: 1.8;
-  margin-bottom: 20px;
-  padding: 12px 16px;
-  background: white;
-  border-radius: 12px;
-  border: 1.5px solid var(--border);
+  margin-top: 4px; margin-bottom: 20px;
 }
 
 /* 結果リスト */
@@ -484,11 +476,12 @@ header p {
 /* ボタン */
 .btn-row {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 10px;
+  margin-bottom: 20px;
 }
 .btn-primary {
-  width: 100%; padding: 15px;
+  flex: 1; padding: 15px;
   background: linear-gradient(135deg, var(--orange-dk), var(--orange));
   color: white; border: none; border-radius: 14px;
   font-family: 'Zen Kaku Gothic New', sans-serif;
@@ -499,7 +492,7 @@ header p {
 }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(255,122,0,.42); }
 .btn-secondary {
-  width: 100%; padding: 13px;
+  flex: 1; padding: 13px;
   background: white;
   color: var(--orange-dk);
   border: 2px solid var(--orange);
@@ -597,7 +590,7 @@ header p {
       </div>
     </div>
 
-    <button class="skip-btn" id="skip-btn">わからない / スキップ</button>
+    <button class="skip-btn" id="skip-btn">わからない</button>
     <button class="next-btn" id="next-btn"></button>
   </div>
 </div>
@@ -612,15 +605,14 @@ header p {
         <span id="result-score"></span><span class="score-denom"> / <span id="result-total"></span></span>
       </div>
       <div class="score-pct" id="result-pct"></div>
-      <div class="score-msg" id="result-msg"></div>
-
-      <div class="result-list-label">問題一覧</div>
-      <div class="result-list-wrap" id="result-list"></div>
 
       <div class="btn-row">
         <button class="btn-primary" id="btn-retry">もう一度チャレンジ</button>
         <button class="btn-secondary" id="btn-home">ホームに戻る</button>
       </div>
+
+      <div class="result-list-label">問題一覧</div>
+      <div class="result-list-wrap" id="result-list"></div>
     </div>
   </div>
 </div>
@@ -849,7 +841,7 @@ function judgeAnswer(val) {
     input.classList.add('correct-input');
     fb.className = 'feedback fb-correct show';
     document.getElementById('fb-icon').textContent   = '✓';
-    document.getElementById('fb-msg').textContent    = '正解！きみはとき宣マスター';
+    document.getElementById('fb-msg').textContent    = '正解！';
     document.getElementById('fb-answer').textContent = '';
   } else {
     input.classList.add('wrong-input');
@@ -881,7 +873,7 @@ document.getElementById('skip-btn').addEventListener('click', function() {
 
   fb.className = 'feedback fb-wrong show';
   document.getElementById('fb-icon').textContent   = '⏭';
-  document.getElementById('fb-msg').textContent    = 'スキップ！';
+  document.getElementById('fb-msg').textContent    = '不正解';
   document.getElementById('fb-answer').textContent = `正解：「${item.title}」`;
 
   results.push({ item, correct: false, userVal: '(スキップ)' });
@@ -916,19 +908,11 @@ function renderResult() {
   const total = queue.length;
   const pct   = Math.round((score / total) * 100);
 
-  let msg = '';
-  if (pct === 100) msg = '全問正解！！完璧すぎるとき宣マスター<br>ジャケ写のすみずみまで知ってるね！';
-  else if (pct >= 80) msg = 'すごい！ほぼ完璧だよ<br>ジャケ写もしっかり頭に入ってる！';
-  else if (pct >= 60) msg = 'なかなかいい感じ！<br>あと少しで完璧な宣伝部員';
-  else if (pct >= 40) msg = 'これがジャケ写に出会うきっかけ<br>改めて見てみてね！';
-  else                msg = 'ジャケ写、この機会にじっくり<br>見てみてね すべてに物語があるよ！';
-
   document.getElementById('result-mode-tag').textContent =
     currentMode === 'single' ? 'シングル編' : 'アルバム編';
   document.getElementById('result-score').textContent = score;
   document.getElementById('result-total').textContent = total;
   document.getElementById('result-pct').textContent   = `正解率 ${pct}%`;
-  document.getElementById('result-msg').innerHTML     = msg;
 
   document.getElementById('result-list').innerHTML = results.map(r => `
     <div class="result-item">
